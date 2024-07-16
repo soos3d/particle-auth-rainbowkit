@@ -25,9 +25,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthCoreContextProvider
           options={{
-            projectId: process.env.NEXT_PUBLIC_PROJECT_ID || "",
-            clientKey: process.env.NEXT_PUBLIC_CLIENT_KEY || "",
-            appId: process.env.NEXT_PUBLIC_APP_ID || "",
+            projectId: process.env.NEXT_PUBLIC_PROJECT_ID!,
+            clientKey: process.env.NEXT_PUBLIC_CLIENT_KEY!,
+            appId: process.env.NEXT_PUBLIC_APP_ID!,
             customStyle: {
               zIndex: 2147483650, // must greater than 2147483646
             },

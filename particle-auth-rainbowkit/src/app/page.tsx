@@ -66,6 +66,7 @@ export default function Home() {
   // end: fix social auth login
 
   // Create provider instance with ethers V6
+  // use new ethers.providers.Web3Provider(provider, "any"); for Ethers V5
   const ethersProvider = new ethers.BrowserProvider(
     provider as Eip1193Provider,
     "any"
@@ -84,8 +85,9 @@ export default function Home() {
       const signer = await ethersProvider.getSigner();
       const address = await signer.getAddress();
       const balanceResponse = await ethersProvider.getBalance(address);
-      const balanceInEther = ethers.formatEther(balanceResponse);
+      const balanceInEther = ethers.formatEther(balanceResponse); // ethers V5 will need the utils module for those convertion operations
       console.log(address, balanceInEther);
+
       // Format the balance using the utility function
       const fixedBalance = formatBalance(balanceInEther);
       setBalance(fixedBalance);
@@ -102,7 +104,7 @@ export default function Home() {
     const tx = {
       to: recipientAddress,
       value: ethers.parseEther("0.01"),
-      data: "0x",
+      data: "0x", // data is needed only when interacting with smart contracts. 0x equals to zero and it's here for demonstration only
     };
 
     try {
@@ -154,103 +156,97 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-between p-8 bg-black text-white">
       <Header />
-      {/*
-            UI starts with a condition. If userInfo is undefined, the user is not logged in so the connect button is displayed.
-      */}
       <main className="flex-grow flex flex-col items-center justify-center w-full max-w-6xl mx-auto">
-        {!userInfo ? (
+        <div className="p-4">
           <ConnectButton />
+        </div>
+        {!userInfo ? (
+          <div className="text-center">
+            <p className="text-lg font-semibold mb-2 ">
+              Connect your wallet to continue.
+            </p>
+          </div>
         ) : (
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-              {/*
-            In this card we display info from Particle Auth
-            This area shocases how to fetch various kind of data from Particle Auth directly.
-
-            The connect button is displayed again because once the user is logged in, it shows address info and disconnect button
-              */}
-              <div className="border border-purple-500 p-6 rounded-lg">
-                <h2 className="text-2xl font-bold mb-2 text-white">
-                  Accounts info
-                </h2>
-                <ConnectButton />
-                <h2 className="text-lg font-semibold mb-2 mt-2 text-white">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <div className="border border-purple-500 p-6 rounded-lg">
+              <h2 className="text-2xl font-bold mb-2 text-white">
+                Accounts info
+              </h2>
+              <div className="flex items-center">
+                <h2 className="text-lg font-semibold mb-2 text-white mr-2">
                   Name: {userInfo.name}
                 </h2>
-                <h2 className="text-lg font-semibold mb-2 text-white">
-                  Status: {connectionStatus}
-                </h2>
-                <div className="flex items-center">
-                  <h3 className="text-lg font-semibold text-purple-400 mr-2">
-                    Balance: {balance} {chainInfo.nativeCurrency.symbol}
-                  </h3>
-                  <button
-                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded transition duration-300 ease-in-out transform hover:scale-105 shadow-lg flex items-center"
-                    onClick={fetchBalance}
-                  >
-                    🔄
-                  </button>
-                </div>
-              </div>
-              <div className="border border-purple-500 p-6 rounded-lg">
-                {/*
-              The card to send a transaction
-              Good showcase on how to use states to display more info about the transaction.
-                */}
-                <h2 className="text-2xl font-bold mb-2 text-white">
-                  Send a transaction
-                </h2>
-                <h2 className="text-lg">Send 0.01 ETH</h2>
-                <input
-                  type="text"
-                  placeholder="Recipient Address"
-                  value={recipientAddress}
-                  onChange={(e) => setRecipientAddress(e.target.value)}
-                  className="mt-4 p-2 w-full rounded border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                <img
+                  src={userInfo.avatar}
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full"
                 />
-                <button
-                  className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-                  onClick={executeTxEvm}
-                  disabled={!recipientAddress || isSending}
-                >
-                  {isSending ? "Sending..." : "Send 0.01 ETH"}
-                </button>
-                {transactionHash && (
-                  <TxNotification
-                    hash={transactionHash}
-                    blockExplorerUrl={chainInfo.blockExplorerUrl}
-                  />
-                )}
               </div>
-              <div className="border border-purple-500 p-6 rounded-lg">
-                {/*
-            The card where the user can sign a message
-              */}
-                <h2 className="text-2xl font-bold mb-2">Sign a Message</h2>
-                <p className="text-lf">Pick a provider to sign with:</p>
-                <select
-                  value={selectedProvider}
-                  onChange={(e) => setSelectedProvider(e.target.value)}
-                  className="mt-4 p-2 w-full rounded border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
-                >
-                  <option value="ethers">Ethers Provider</option>
-                  <option value="particle">Particle Auth</option>
-                </select>
+              <h2 className="text-lg font-semibold mb-2 text-white">
+                Status: {connectionStatus}
+              </h2>
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold text-purple-400 mr-2">
+                  Balance: {balance} {chainInfo.nativeCurrency.symbol}
+                </h3>
                 <button
-                  className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-                  onClick={
-                    selectedProvider === "ethers"
-                      ? signMessageEthers
-                      : signMessageParticle
-                  }
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-1 px-2 rounded transition duration-300 ease-in-out transform hover:scale-105 shadow-lg flex items-center"
+                  onClick={fetchBalance}
                 >
-                  Sign Message
+                  🔄
                 </button>
               </div>
             </div>
+            <div className="border border-purple-500 p-6 rounded-lg">
+              <h2 className="text-2xl font-bold mb-2 text-white">
+                Send a transaction
+              </h2>
+              <h2 className="text-lg">Send 0.01 ETH</h2>
+              <input
+                type="text"
+                placeholder="Recipient Address"
+                value={recipientAddress}
+                onChange={(e) => setRecipientAddress(e.target.value)}
+                className="mt-4 p-2 w-full rounded border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              <button
+                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                onClick={executeTxEvm}
+                disabled={!recipientAddress || isSending}
+              >
+                {isSending ? "Sending..." : "Send 0.01 ETH"}
+              </button>
+              {transactionHash && (
+                <TxNotification
+                  hash={transactionHash}
+                  blockExplorerUrl={chainInfo.blockExplorerUrl}
+                />
+              )}
+            </div>
+            <div className="border border-purple-500 p-6 rounded-lg">
+              <h2 className="text-2xl font-bold mb-2">Sign a Message</h2>
+              <p className="text-lf">Pick a provider to sign with:</p>
+              <select
+                value={selectedProvider}
+                onChange={(e) => setSelectedProvider(e.target.value)}
+                className="mt-4 p-2 w-full rounded border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                <option value="ethers">Ethers Provider</option>
+                <option value="particle">Particle Auth</option>
+              </select>
+              <button
+                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                onClick={
+                  selectedProvider === "ethers"
+                    ? signMessageEthers
+                    : signMessageParticle
+                }
+              >
+                Sign Message
+              </button>
+            </div>
           </div>
         )}
-
         <LinksGrid />
       </main>
     </div>
